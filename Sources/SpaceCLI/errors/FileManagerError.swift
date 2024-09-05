@@ -6,6 +6,7 @@ enum FileManagerError: Error, CustomStringConvertible {
     case cannotCreateFileOrDirectory(path: URL)
     case cannotRemoveFileOrDirectory(path: URL)
     case cannotCopyFileOrDirectory(at: URL, to: URL)
+    case cannotMoveFileOrDirectory(at: URL, to: URL)
     
     var description: String {
         switch self {
@@ -28,6 +29,10 @@ enum FileManagerError: Error, CustomStringConvertible {
         case .cannotCopyFileOrDirectory(let at, let to):
             """
             Cannot copy \(at.path) to \(to.path)
+            """
+        case .cannotMoveFileOrDirectory(let at, let to):
+            """
+            Cannot move \(at.path) to \(to.path)
             """
         }
     }

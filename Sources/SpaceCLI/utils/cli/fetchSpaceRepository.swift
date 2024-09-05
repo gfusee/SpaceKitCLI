@@ -1,7 +1,7 @@
 import Foundation
 
 func fetchSpaceRepository(hash: String) async throws(CLIError) -> URL {
-    let spaceRepoUrl = "/Users/quentin/IdeaProjects/space"
+    let spaceRepoUrl = "git@github.com:gfusee/space.git"
     let spaceRepoName = "SpaceFramework"
     
     let permanentStorageDirectory = try getPermanentStorageDirectory()

@@ -11,7 +11,10 @@ actor CurrentTerminalProcess {
 struct SpaceCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "A CLI to perform operations related to the Space framework.",
-        subcommands: [ContractCommand.self]
+        subcommands: [
+            ContractCommand.self,
+            InitCommand.self
+        ]
     )
     
     static func run() async throws {
