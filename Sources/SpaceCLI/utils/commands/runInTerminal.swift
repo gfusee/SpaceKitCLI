@@ -19,20 +19,20 @@ func runInTerminal(
     let fullCommand = "\(command) \(arguments.joined(separator: " "))"
     task.arguments = ["-c", fullCommand]
     
-    await CurrentTerminalProcess.process = task
+    CurrentTerminalProcess.process = task
     
     do {
         print("INFO: Running \(fullCommand) in \(currentDirectoryURL.path)")
         try task.run()
-        await CurrentTerminalProcess.process = nil
+        CurrentTerminalProcess.process = nil
     } catch {
-        await CurrentTerminalProcess.process = nil
-        fatalError() // TODO
+        CurrentTerminalProcess.process = nil
+        throw .common(.cannotRunCommand(command: fullCommand, directory: currentDirectoryURL.path, errorMessage: error.localizedDescription))
     }
     
     task.waitUntilExit()
     let status = task.terminationStatus
     guard status == 0 else {
-        fatalError() // TODO
+        throw .common(.cannotRunCommand(command: fullCommand, directory: currentDirectoryURL.path, errorMessage: "Command exited with status code \(status)."))
     }
 }

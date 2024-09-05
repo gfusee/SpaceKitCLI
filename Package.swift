@@ -5,7 +5,13 @@ import PackageDescription
 
 let package = Package(
     name: "SpaceCLI",
-    products: [], dependencies: [
+    platforms: [
+        .macOS(.v14)
+    ],
+    products: [
+        .executable(name: "SpaceCLI", targets: ["SpaceCLI"])
+    ],
+    dependencies: [
         .package(url: "https://github.com/swiftlang/swift-package-manager", revision: "630330a"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
     ],

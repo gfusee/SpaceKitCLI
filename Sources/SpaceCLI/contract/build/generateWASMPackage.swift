@@ -7,7 +7,7 @@ fileprivate struct DummyError: Error {}
 
 // TODO: automate this with a CI or by cloning the repo and retrieving the tags
 let versionToHash: [String : String] = [
-    "0.0.1" : "b60bc54c47bbdcf6b17f6afdb5fca3311b7a0a5c"
+    "0.0.1" : "ff024564bf612e061cff6a8c17e35f20aa11c983"
 ]
 
 fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) -> Manifest {
@@ -36,7 +36,7 @@ fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) ->
 }
 
 /// Generates the code of a Package.swift containing the contract target, ready for WASM compilation
-func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIError) -> String {
+func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIError) -> (generatedPackage: String, spaceHash: String) {
     let manifestPath = "\(sourcePackagePath)/Package.swift"
     let manifest = try retrieveManifest(sourcePackagePath: sourcePackagePath)
     let packageDependencies = manifest.dependencies
@@ -87,7 +87,7 @@ func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIEr
         ""
     }
     
-    return """
+    let packageCode = """
     // swift-tools-version: 5.10
     // The swift-tools-version declares the minimum version of Swift required to build this package.
 
@@ -130,6 +130,7 @@ func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIEr
             )
         ]
     )
-
     """
+    
+    return (generatedPackage: packageCode, spaceHash: hash)
 }

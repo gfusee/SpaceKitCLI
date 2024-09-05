@@ -27,7 +27,6 @@ struct BuildCommand: AsyncParsableCommand {
     }
 }
 
-// TODO: remove relative path, this is not safe
 func buildContract(
     contractName: String?,
     customSwiftToolchain: String?
@@ -40,7 +39,7 @@ func buildContract(
     
     let target: String
     if let contractName = contractName {
-        fatalError() // TODO
+        target = contractName
     } else {
         guard allContracts.count == 1 else {
             throw .contractBuild(.multipleContractsFound(contracts: allContracts))
@@ -52,8 +51,11 @@ func buildContract(
     let fileManager = FileManager.default
     let pwd = fileManager.currentDirectoryPath
     
-    let linkableObjects = (try await buildLinkableObjects())
+    let wasmPackageInfo = (try generateWASMPackage(sourcePackagePath: pwd, target: target))
+    
+    let linkableObjects = (try await buildLinkableObjects(spaceHash: wasmPackageInfo.spaceHash))
         .map { $0.path }
+    let wasiBuiltinsArchive = ""
     
     let buildFolder = "\(pwd)/.space/sc-build"
     let buildFolderUrl = URL(fileURLWithPath: buildFolder, isDirectory: true)
@@ -98,7 +100,7 @@ func buildContract(
         // Add the custom Package.swift dedicated to WASM compilation
         fileManager.createFile(
             atPath: newPackagePath,
-            contents: (try generateWASMPackage(sourcePackagePath: pwd, target: target)).data(using: .utf8)
+            contents: wasmPackageInfo.generatedPackage.data(using: .utf8)
         )
         
         // Run Swift build for WASM target
