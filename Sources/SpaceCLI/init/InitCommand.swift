@@ -62,4 +62,14 @@ func initializeProject(
     catch {
         throw .fileManager(.cannotMoveFileOrDirectory(at: adderTemplateContractPath, to: namedTemplateContractPath))
     }
+    
+    let adderTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/AdderTests")
+    let namedTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/\(name)Tests")
+    
+    do {
+        try fileManager.moveItem(at: adderTestTemplateContractPath, to: namedTestTemplateContractPath)
+    }
+    catch {
+        throw .fileManager(.cannotMoveFileOrDirectory(at: adderTestTemplateContractPath, to: namedTestTemplateContractPath))
+    }
 }
