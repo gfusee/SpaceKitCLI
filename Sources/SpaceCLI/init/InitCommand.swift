@@ -10,8 +10,8 @@ struct InitCommandOptions: ParsableArguments {
 
 struct InitCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        abstract: "Create a new Space project in a new directory.",
-        aliases: ["init"]
+        commandName: "init",
+        abstract: "Create a new Space project in a new directory."
     )
     
     @OptionGroup var options: InitCommandOptions
@@ -71,5 +71,12 @@ func initializeProject(
     }
     catch {
         throw .fileManager(.cannotMoveFileOrDirectory(at: adderTestTemplateContractPath, to: namedTestTemplateContractPath))
+    }
+    
+    let gitDirectoryPath = projectPath.appending(path: ".git")
+    do {
+        try fileManager.removeItem(at: gitDirectoryPath)
+    } catch {
+        throw .fileManager(.cannotRemoveFileOrDirectory(path: gitDirectoryPath))
     }
 }

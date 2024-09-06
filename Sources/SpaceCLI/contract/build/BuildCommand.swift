@@ -13,8 +13,8 @@ struct BuildCommandOptions: ParsableArguments {
 
 struct BuildCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        abstract: "Build a contract to a .wasm file",
-        aliases: ["build"]
+        commandName: "build",
+        abstract: "Build a contract to a .wasm file"
     )
     
     @OptionGroup var options: BuildCommandOptions
@@ -160,7 +160,7 @@ func buildContract(
         print(
             """
             \(target) built successfully!
-            WAMS output: \(wasmDestFilePath)
+            WASM output: \(wasmDestFilePath)
             """
         )
     } catch {
