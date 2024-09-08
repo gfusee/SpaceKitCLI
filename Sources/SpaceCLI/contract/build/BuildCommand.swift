@@ -55,7 +55,6 @@ func buildContract(
     
     let linkableObjects = (try await buildLinkableObjects(spaceHash: wasmPackageInfo.spaceHash))
         .map { $0.path }
-    let wasiBuiltinsArchive = ""
     
     let buildFolder = "\(pwd)/.space/sc-build"
     let buildFolderUrl = URL(fileURLWithPath: buildFolder, isDirectory: true)

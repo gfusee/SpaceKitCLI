@@ -49,5 +49,8 @@ func buildLinkableObjects(spaceHash: String) async throws(CLIError) -> [URL] {
         resultFilePaths.append(outputFilePath)
     }
     
+    // No need to compile libclang_rt.builtins-wasm32
+    resultFilePaths.append(spaceRepoPath.appending(path: "Utils/Builtins/libclang_rt.builtins-wasm32.a"))
+    
     return resultFilePaths
 }
