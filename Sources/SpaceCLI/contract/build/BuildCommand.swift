@@ -50,15 +50,13 @@ func buildContract(
     
     let fileManager = FileManager.default
     let pwd = fileManager.currentDirectoryPath
+    let destVolumePath = "/app"
     
     let wasmPackageInfo = (try generateWASMPackage(sourcePackagePath: pwd, target: target))
     
-    let linkableObjects = (try await buildLinkableObjects(spaceHash: wasmPackageInfo.spaceHash))
-        .map { $0.path }
-    
-    let buildFolder = "\(pwd)/.space/sc-build"
+    let buildFolder = "\(destVolumePath)/.space/sc-build"
     let buildFolderUrl = URL(fileURLWithPath: buildFolder, isDirectory: true)
-    let sourceTargetPath = "\(pwd)/Contracts/\(target)"
+    let sourceTargetPath = "\(destVolumePath)/Contracts/\(target)"
     let contractsUrl = buildFolderUrl.appending(path: "Contracts")
     let linkedTargetUrl = contractsUrl
         .appending(path: target)
@@ -66,95 +64,71 @@ func buildContract(
     let objectFilePath = "\(buildFolder)/\(target).o"
     let wasmBuiltFilePath = "\(buildFolder)/\(target).wasm"
     let wasmOptFilePath = "\(buildFolder)/\(target)-opt.wasm"
-    let targetPackageOutputPath = "\(pwd)/Contracts/\(target)/Output"
+    let targetPackageOutputPath = "\(destVolumePath)/Contracts/\(target)/Output"
     let wasmDestFilePath = "\(targetPackageOutputPath)/\(target).wasm"
 
-    let swiftCommand = if let customSwiftToolchain = customSwiftToolchain {
-        "\(customSwiftToolchain)/swift"
-    } else {
-        "swift"
-    }
+    let swiftCommand = "/usr/bin/swift"
 
     do {
         // Explanations: we want to create a symbolic link of the source files before compiling them.
         // By doing so, we avoid generating *.o files in the user project root directory
         
-        if fileManager.fileExists(atPath: contractsUrl.path) {
-            try fileManager.removeItem(at: contractsUrl)
-        }
+        let newPackagePath = "\(buildFolder)/Package.swift"
         
-        try fileManager.createDirectory(at: contractsUrl, withIntermediateDirectories: true)
+        let newPackageBase64String = wasmPackageInfo.generatedPackage.toBase64()
+        
+        let rmContractsCommand = "rm -rf \(contractsUrl.path)"
+        let createContractsCommand = "mkdir \(contractsUrl.path)"
+        let rmOldGeneratedPackage = "rm -f \(newPackagePath)"
+        let echoNewPackageCommand = """
+            echo "\(newPackageBase64String)" | base64 --decode > \(newPackagePath)
+        """
+        let createOutputDirectoryCommand = "mkdir -p \(targetPackageOutputPath)"
         
         // Create the Contracts/TARGET symbolic link
-        try await runInTerminal(
-            currentDirectoryURL: buildFolderUrl,
-            command: "ln -sf \(sourceTargetPath) \(linkedTargetUrl.path)"
-        )
+        let symbolicTargetLinkCommand = "ln -sf \(sourceTargetPath) \(linkedTargetUrl.path)"
         
-        let newPackagePath = "\(buildFolder)/Package.swift"
-        if fileManager.fileExists(atPath: newPackagePath) {
-            try fileManager.removeItem(at: URL(filePath: newPackagePath))
-        }
-        
-        // Add the custom Package.swift dedicated to WASM compilation
-        fileManager.createFile(
-            atPath: newPackagePath,
-            contents: wasmPackageInfo.generatedPackage.data(using: .utf8)
-        )
-        
-        // Run Swift build for WASM target
-        try await runInTerminal(
-            currentDirectoryURL: buildFolderUrl,
-            command: swiftCommand,
-            environment: ["SWIFT_WASM": "true"],
-            arguments: [
-                "build", "--target", target,
-                "--triple", "wasm32-unknown-none-wasm",
-                "--disable-index-store",
-                "-Xswiftc", "-Osize",
-                "-Xswiftc", "-gnone"
-            ]
-        )
+        let swiftBuildArguments: [String] = [
+            "--package-path", buildFolder,
+            "--target", target,
+            "--triple", "wasm32-unknown-none-wasm",
+            "--disable-index-store",
+            "-Xswiftc", "-Osize",
+            "-Xswiftc", "-gnone"
+        ]
+        let swiftBuildCommand = "SWIFT_WASM=true \(swiftCommand) build \(swiftBuildArguments.joined(separator: " "))"
         
         var wasmLdArguments = [
             "--no-entry", "--allow-undefined",
             "-o", wasmBuiltFilePath,
-            objectFilePath
+            objectFilePath,
+            "objects/memcpy.o",
+            "objects/libclang_rt.builtins-wasm32.a"
         ]
+        let wasmLdCommand = "wasm-ld \(wasmLdArguments.joined(separator: " "))"
         
-        for linkableObject in linkableObjects {
-            wasmLdArguments.append(linkableObject)
-        }
+        let wasmOptCommand = "wasm-opt -Os -o \(wasmOptFilePath) \(wasmBuiltFilePath)"
         
-        // Run wasm-ld
-        try await runInTerminal(
-            currentDirectoryURL: buildFolderUrl,
-            command: "wasm-ld",
-            arguments: wasmLdArguments
+        let oldWasmRmCommand = "rm -f \(wasmDestFilePath)"
+        let copyWasmCommand = "cp \(wasmOptFilePath) \(wasmDestFilePath)"
+        
+        try await runInDocker(
+            hostVolumeURL: URL(fileURLWithPath: pwd, isDirectory: true),
+            destVolumeURL: URL(fileURLWithPath: destVolumePath, isDirectory: true),
+            commands: [
+                rmContractsCommand,
+                createContractsCommand,
+                rmOldGeneratedPackage,
+                echoNewPackageCommand,
+                createOutputDirectoryCommand,
+                symbolicTargetLinkCommand,
+                swiftBuildCommand,
+                wasmLdCommand,
+                wasmOptCommand,
+                oldWasmRmCommand,
+                copyWasmCommand
+            ]
         )
-        
-        // Run wasm-opt
-        try await runInTerminal(
-            currentDirectoryURL: buildFolderUrl,
-            command: "wasm-opt",
-            arguments: ["-Os", "-o", wasmOptFilePath, wasmBuiltFilePath]
-        )
-        
-        // Create target package output directory
-        try fileManager.createDirectory(atPath: targetPackageOutputPath, withIntermediateDirectories: true, attributes: nil)
-        
-        // Create the Output directory if needed
-        if !fileManager.fileExists(atPath: targetPackageOutputPath) {
-            try fileManager.createDirectory(atPath: targetPackageOutputPath, withIntermediateDirectories: true, attributes: nil)
-        }
-        
-        // Remove any previously built .wasm
-        if fileManager.fileExists(atPath: wasmDestFilePath) {
-            try fileManager.removeItem(atPath: wasmDestFilePath)
-        }
-        
-        // Copy optimized WASM file to the destination
-        try fileManager.copyItem(atPath: wasmOptFilePath, toPath: wasmDestFilePath)
         
         print(
             """

@@ -3,8 +3,7 @@ import AppKit
 func runInTerminal(
     currentDirectoryURL: URL,
     command: String,
-    environment: [String : String] = [:],
-    arguments: [String] = []
+    environment: [String : String] = [:]
 ) async throws(CLIError) {
     let task = Process()
     
@@ -15,24 +14,57 @@ func runInTerminal(
     environment["PATH"] = ProcessInfo.processInfo.environment["PATH"] ?? ""
     
     task.environment = environment
-    
-    let fullCommand = "\(command) \(arguments.joined(separator: " "))"
-    task.arguments = ["-c", fullCommand]
+    task.arguments = ["-c", command]
     
     CurrentTerminalProcess.process = task
     
     do {
-        print("INFO: Running \(fullCommand) in \(currentDirectoryURL.path)")
+        print("INFO: Running \(command) in \(currentDirectoryURL.path)")
         try task.run()
         CurrentTerminalProcess.process = nil
     } catch {
         CurrentTerminalProcess.process = nil
-        throw .common(.cannotRunCommand(command: fullCommand, directory: currentDirectoryURL.path, errorMessage: error.localizedDescription))
+        throw .common(.cannotRunCommand(command: command, directory: currentDirectoryURL.path, errorMessage: error.localizedDescription))
     }
     
     task.waitUntilExit()
     let status = task.terminationStatus
     guard status == 0 else {
-        throw .common(.cannotRunCommand(command: fullCommand, directory: currentDirectoryURL.path, errorMessage: "Command exited with status code \(status)."))
+        throw .common(.cannotRunCommand(command: command, directory: currentDirectoryURL.path, errorMessage: "Command exited with status code \(status)."))
     }
+}
+
+func runInDocker(
+    hostVolumeURL: URL,
+    destVolumeURL: URL,
+    commands: [String],
+    environment: [String : String] = [:],
+    arguments: [String] = []
+) async throws(CLIError) {
+    var commandsWithInfo: [String] = []
+    for command in commands {
+        commandsWithInfo.append("""
+        echo "Info: Running \(command) in Docker"
+        """)
+        
+        commandsWithInfo.append(command)
+    }
+    
+    let commandsWithInfoString = commandsWithInfo.joined(separator: "\n\n")
+    let script = """
+    #!/bin/zsh
+
+    # Exit immediately if a command exits with a non-zero status
+    set -e
+    
+    \(commandsWithInfoString)
+    """
+    
+    try await runInTerminal(
+        currentDirectoryURL: hostVolumeURL,
+        command: """
+                docker run -v /Users/quentin/IdeaProjects/space:/space -v .:\(destVolumeURL.path) space /bin/bash -c "echo '\(script.toBase64())' | base64 -d | /bin/bash"
+                """,
+        environment: environment
+    )
 }
