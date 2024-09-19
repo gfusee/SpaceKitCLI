@@ -78,7 +78,7 @@ func buildContract(
         let newPackageBase64String = wasmPackageInfo.generatedPackage.toBase64()
         
         let rmContractsCommand = "rm -rf \(contractsUrl.path)"
-        let createContractsCommand = "mkdir \(contractsUrl.path)"
+        let createContractsCommand = "mkdir -p \(contractsUrl.path)"
         let rmOldGeneratedPackage = "rm -f \(newPackagePath)"
         let echoNewPackageCommand = """
             echo "\(newPackageBase64String)" | base64 --decode > \(newPackagePath)

@@ -63,7 +63,7 @@ func runInDocker(
     try await runInTerminal(
         currentDirectoryURL: hostVolumeURL,
         command: """
-                docker run -v /Users/quentin/IdeaProjects/space:/space -v .:\(destVolumeURL.path) space /bin/bash -c "echo '\(script.toBase64())' | base64 -d | /bin/bash"
+                docker run --rm -v .:\(destVolumeURL.path) ghcr.io/gfusee/space-cli:0.0.1-beta-1 /bin/bash -c "echo '\(script.toBase64())' | base64 -d | /bin/bash"
                 """,
         environment: environment
     )

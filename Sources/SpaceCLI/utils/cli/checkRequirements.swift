@@ -3,7 +3,7 @@ import Foundation
 func checkRequirements() async throws(CLIError) {
     let directory = URL(filePath: FileManager.default.currentDirectoryPath, directoryHint: .isDirectory)
     
-    let requirements: [String] = ["clang", "git", "swift", "wasm-ld", "wasm-opt"]
+    let requirements: [String] = ["docker", "git"]
     
     for requirement in requirements {
         do {

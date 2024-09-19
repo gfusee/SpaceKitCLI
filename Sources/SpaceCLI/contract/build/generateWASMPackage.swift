@@ -54,7 +54,8 @@ func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIEr
     case .local(let setting):
         spaceUrl = setting.pathString
     case .remote(let settings):
-        spaceUrl = settings.absoluteString
+        spaceUrl = "/space"
+        // TODO: use "spaceUrl = settings.absoluteString" instead when space is public
     }
     
     let spaceRequirements: PackageRequirement

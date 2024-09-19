@@ -1,5 +1,9 @@
 FROM swift:latest
 
+LABEL org.opencontainers.image.source=https://github.com/gfusee/space-cli
+
+COPY space space
+
 VOLUME app
 WORKDIR /
 
