@@ -4,7 +4,7 @@ enum ManifestError: Error, CustomStringConvertible {
     case cannotReadDependencyRequirement(manifestPath: String, dependency: String)
     case spaceDependencyShouldHaveExactVersion(manifestPath: String)
     case spaceDependencyShouldBeAGitRepository(manifestPath: String)
-    case invalidSpaceVersion(manifestPath: String, versionFound: String, validVersions: [String])
+    case invalidSpaceVersion(manifestPath: String, versionFound: String)
     case targetNotFound(manifestPath: String, target: String)
     
     var description: String {
@@ -31,14 +31,11 @@ enum ManifestError: Error, CustomStringConvertible {
             """
             The dependency "Space" in \(manifestPath) should has be specified by it's exact version.
             """
-        case .invalidSpaceVersion(let manifestPath, let versionFound, let validVersions):
+        case .invalidSpaceVersion(let manifestPath, let versionFound):
             """
             Invalid version found for the Space dependency in \(manifestPath).
             
             Version found: \(versionFound)
-            Available versions:
-            
-            - \(validVersions.joined(separator: "\n- "))
             """
         case .targetNotFound(let manifestPath, let target):
             """

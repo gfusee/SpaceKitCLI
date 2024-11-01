@@ -20,7 +20,7 @@ struct SpaceCLI: AsyncParsableCommand {
     
     static func run() async throws {
         let signalCallback: sig_t = { signal in
-            let task = Task { @MainActor in
+            Task { @MainActor in
                 if let terminalProcess = CurrentTerminalProcess.process, terminalProcess.isRunning {
                     print("Interrupting terminal...")
                     terminalProcess.interrupt()

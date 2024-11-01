@@ -1,10 +1,20 @@
 import AppKit
+import Synchronization
+
+private actor WrappedString {
+    public var string: String = ""
+    
+    func append(_ value: String) {
+        self.string += value
+    }
+}
 
 func runInTerminal(
     currentDirectoryURL: URL,
     command: String,
-    environment: [String : String] = [:]
-) async throws(CLIError) {
+    environment: [String : String] = [:],
+    logCommand: Bool = true
+) async throws(CLIError) -> String {
     let task = Process()
     
     task.currentDirectoryURL = currentDirectoryURL
@@ -16,10 +26,29 @@ func runInTerminal(
     task.environment = environment
     task.arguments = ["-c", command]
     
+    let outputPipe = Pipe()
+    task.standardOutput = outputPipe
+    task.standardError = outputPipe
+    
+    let output = WrappedString()
+    
+    outputPipe.fileHandleForReading.readabilityHandler = { fileHandle in
+        let data = fileHandle.availableData
+        if let line = String(data: data, encoding: .utf8), !line.isEmpty {
+            print(line, terminator: "") // Print the output line by line
+            
+            Task {
+                await output.append(line) // Append to the output string
+            }
+        }
+    }
+    
     CurrentTerminalProcess.process = task
     
     do {
-        print("INFO: Running \(command) in \(currentDirectoryURL.path)")
+        if logCommand {
+            print("INFO: Running \(command) in \(currentDirectoryURL.path)")
+        }
         try task.run()
         CurrentTerminalProcess.process = nil
     } catch {
@@ -32,20 +61,25 @@ func runInTerminal(
     guard status == 0 else {
         throw .common(.cannotRunCommand(command: command, directory: currentDirectoryURL.path, errorMessage: "Command exited with status code \(status)."))
     }
+    
+    return await output.string
 }
 
 func runInDocker(
-    hostVolumeURL: URL,
-    destVolumeURL: URL,
+    volumeURLs: (host: URL, dest: URL)?,
     commands: [String],
     environment: [String : String] = [:],
-    arguments: [String] = []
-) async throws(CLIError) {
+    arguments: [String] = [],
+    showDockerLogs: Bool = true
+) async throws(CLIError) -> String {
     var commandsWithInfo: [String] = []
+    
     for command in commands {
-        commandsWithInfo.append("""
-        echo "Info: Running \(command) in Docker"
-        """)
+        if showDockerLogs {
+            commandsWithInfo.append("""
+            echo "Info: Running \(command) in Docker"
+            """)
+        }
         
         commandsWithInfo.append(command)
     }
@@ -60,11 +94,42 @@ func runInDocker(
     \(commandsWithInfoString)
     """
     
-    try await runInTerminal(
-        currentDirectoryURL: hostVolumeURL,
+    let removeDockerLogsIfNeeded = if showDockerLogs {
+        ""
+    } else {
+        " 2>/dev/null"
+    }
+    
+    let (currentDirectoryURL, volumeArg) = if let volumeURLs = volumeURLs {
+        (volumeURLs.host, " -v .:\(volumeURLs.dest.path)")
+    } else {
+        (
+            URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true),
+            ""
+        )
+    }
+    
+    let dockerImage = "ghcr.io/gfusee/space-cli:0.0.1-beta-3"
+    
+    // Try to pull the space-cli docker image, but skip if:
+    //
+    // - The image already exists
+    // - There is no internet connection
+    _ = try await runInTerminal(
+        currentDirectoryURL: currentDirectoryURL,
         command: """
-                docker run --rm -v .:\(destVolumeURL.path) ghcr.io/gfusee/space-cli:0.0.1-beta-2 /bin/bash -c "echo '\(script.toBase64())' | base64 -d | /bin/bash"
+            docker images --format "{{.Repository}}:{{.Tag}}" | grep -q '\(dockerImage)' || (ping -c 1 google.com >/dev/null 2>&1 && docker pull \(dockerImage))
+            """,
+        environment: environment,
+        logCommand: false
+    )
+    
+    return try await runInTerminal(
+        currentDirectoryURL: currentDirectoryURL,
+        command: """
+                docker run --rm\(volumeArg) \(dockerImage) /bin/bash -c "echo '\(script.toBase64())'\(removeDockerLogsIfNeeded) | base64 -d | /bin/bash"
                 """,
-        environment: environment
+        environment: environment,
+        logCommand: false
     )
 }

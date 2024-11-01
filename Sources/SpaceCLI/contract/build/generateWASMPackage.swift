@@ -5,11 +5,6 @@ import PackageGraph
 
 fileprivate struct DummyError: Error {}
 
-// TODO: automate this with a CI or by cloning the repo and retrieving the tags
-let versionToHash: [String : String] = [
-    "0.0.1" : "88563121484d503df1d1e0e3874b4c8f387bd1c2"
-]
-
 fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) -> Manifest {
     let sourcePackageAbsolutePath: AbsolutePath
     let workspace: Workspace
@@ -26,7 +21,7 @@ fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) ->
         switch result! {
         case .success(let manifest):
             return manifest
-        case .failure(let error):
+        case .failure(_):
             throw DummyError()
         }
     } catch {
@@ -36,7 +31,7 @@ fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) ->
 }
 
 /// Generates the code of a Package.swift containing the contract target, ready for WASM compilation
-func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIError) -> (generatedPackage: String, spaceHash: String) {
+func generateWASMPackage(sourcePackagePath: String, target: String) async throws(CLIError) -> (generatedPackage: String, spaceHash: String) {
     let manifestPath = "\(sourcePackagePath)/Package.swift"
     let manifest = try retrieveManifest(sourcePackagePath: sourcePackagePath)
     let packageDependencies = manifest.dependencies
@@ -54,8 +49,7 @@ func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIEr
     case .local(let setting):
         spaceUrl = setting.pathString
     case .remote(let settings):
-        spaceUrl = "/space"
-        // TODO: use "spaceUrl = settings.absoluteString" instead when space is public
+        spaceUrl = settings.absoluteString
     }
     
     let spaceRequirements: PackageRequirement
@@ -70,11 +64,20 @@ func generateWASMPackage(sourcePackagePath: String, target: String) throws(CLIEr
     }
     
     let versionString = "\(version.major).\(version.minor).\(version.patch)"
-    guard let hash = versionToHash[versionString] else {
+    let hash: String? = (try? await runInDocker(
+        volumeURLs: nil,
+        commands: [
+            "./get_tag_hash.sh \(versionString)",
+        ],
+        showDockerLogs: false
+    ))?.trimmingCharacters(in: .whitespacesAndNewlines)
+    
+    guard let hash = hash,
+          !hash.contains("not found")
+    else {
         throw .manifest(.invalidSpaceVersion(
             manifestPath: manifestPath,
-            versionFound: versionString,
-            validVersions: Array(versionToHash.keys)
+            versionFound: versionString
         ))
     }
     

@@ -7,7 +7,7 @@ func checkRequirements() async throws(CLIError) {
     
     for requirement in requirements {
         do {
-            try await runInTerminal(
+            _ = try await runInTerminal(
                 currentDirectoryURL: directory,
                 command: "which \(requirement)"
             )

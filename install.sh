@@ -13,7 +13,7 @@ INSTALL_BIN_PATH="$INSTALL_PATH/space"
 TEMP_DIR=$(mktemp -d)
 
 cd $TEMP_DIR
-git clone git@github.com:gfusee/space-cli.git
+git clone https://github.com/gfusee/space-cli.git
 cd space-cli
 
 # Create the installation directory if it doesn't exist

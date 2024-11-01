@@ -52,7 +52,7 @@ func buildContract(
     let pwd = fileManager.currentDirectoryPath
     let destVolumePath = "/app"
     
-    let wasmPackageInfo = (try generateWASMPackage(sourcePackagePath: pwd, target: target))
+    let wasmPackageInfo = (try await generateWASMPackage(sourcePackagePath: pwd, target: target))
     
     let buildFolder = "\(destVolumePath)/.space/sc-build"
     let buildFolderUrl = URL(fileURLWithPath: buildFolder, isDirectory: true)
@@ -66,6 +66,7 @@ func buildContract(
     let wasmOptFilePath = "\(buildFolder)/\(target)-opt.wasm"
     let targetPackageOutputPath = "\(destVolumePath)/Contracts/\(target)/Output"
     let wasmDestFilePath = "\(targetPackageOutputPath)/\(target).wasm"
+    let wasmHostFinalPath = wasmDestFilePath.replacingOccurrences(of: destVolumePath, with: pwd)
 
     let swiftCommand = "/usr/bin/swift"
 
@@ -98,7 +99,7 @@ func buildContract(
         ]
         let swiftBuildCommand = "SWIFT_WASM=true \(swiftCommand) build \(swiftBuildArguments.joined(separator: " "))"
         
-        var wasmLdArguments = [
+        let wasmLdArguments = [
             "--no-entry", "--allow-undefined",
             "-o", wasmBuiltFilePath,
             objectFilePath,
@@ -112,9 +113,11 @@ func buildContract(
         let oldWasmRmCommand = "rm -f \(wasmDestFilePath)"
         let copyWasmCommand = "cp \(wasmOptFilePath) \(wasmDestFilePath)"
         
-        try await runInDocker(
-            hostVolumeURL: URL(fileURLWithPath: pwd, isDirectory: true),
-            destVolumeURL: URL(fileURLWithPath: destVolumePath, isDirectory: true),
+        let _ = try await runInDocker(
+            volumeURLs: (
+                host: URL(fileURLWithPath: pwd, isDirectory: true),
+                dest: URL(fileURLWithPath: destVolumePath, isDirectory: true)
+            ),
             commands: [
                 rmContractsCommand,
                 createContractsCommand,
@@ -133,7 +136,7 @@ func buildContract(
         print(
             """
             \(target) built successfully!
-            WASM output: \(wasmDestFilePath)
+            WASM output: \(wasmHostFinalPath)
             """
         )
     } catch {
