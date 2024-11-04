@@ -11,6 +11,7 @@ INSTALL_BIN_PATH="$INSTALL_PATH/space"
 
 # Create a temporary directory
 TEMP_DIR=$(mktemp -d)
+trap "echo \"Removing temp directories...\" && rm -rf $TEMP_DIR" EXIT INT TERM ERR
 
 cd $TEMP_DIR
 git clone https://github.com/gfusee/space-cli.git
