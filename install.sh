@@ -32,14 +32,14 @@ if [[ ":$PATH:" != *":$INSTALL_PATH:"* ]]; then
 
     # Append the path to ~/.bashrc if using Bash
     if [ -f "$HOME/.bashrc" ]; then
-        echo "export PATH=\"\$PATH:$INSTALL_PATH\"" >> "$HOME/.bashrc"
+        sed -i -e '$a\' "$HOME/.bashrc" && echo "export PATH=\"\$PATH:$INSTALL_PATH\"" >> "$HOME/.bashrc"
         echo "PATH updated in ~/.bashrc"
         source "$HOME/.bashrc"
     fi
 
     # Append the path to ~/.zshrc if using Zsh
     if [ -f "$HOME/.zshrc" ]; then
-        echo "export PATH=\"\$PATH:$INSTALL_PATH\"" >> "$HOME/.zshrc"
+        sed -i -e '$a\' "$HOME/.zshrc" && echo "export PATH=\"\$PATH:$INSTALL_PATH\"" >> "$HOME/.zshrc"
         echo "PATH updated in ~/.zshrc"
     fi
 
