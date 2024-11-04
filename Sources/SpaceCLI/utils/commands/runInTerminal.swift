@@ -1,5 +1,4 @@
-import AppKit
-import Synchronization
+import Foundation
 
 private actor WrappedString {
     public var string: String = ""
