@@ -26,6 +26,7 @@ fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) ->
         }
     } catch {
         let manifestPath = "\(sourcePackagePath)/Package.swift"
+        print(error.localizedDescription) // TODO: temp, delete when --verbose is here
         throw .manifest(.cannotReadManifest(path: manifestPath))
     }
 }
