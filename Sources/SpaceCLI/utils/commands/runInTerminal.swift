@@ -108,7 +108,7 @@ func runInDocker(
         )
     }
     
-    let dockerImage = "ghcr.io/gfusee/space-cli:0.0.1-beta-3"
+    let dockerImage = "ghcr.io/gfusee/space-cli:0.0.4"
     
     // Try to pull the space-cli docker image, but skip if:
     //
