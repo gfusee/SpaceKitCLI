@@ -65,17 +65,15 @@ func generateWASMPackage(sourcePackagePath: String, target: String) async throws
     }
     
     let versionString = "\(version.major).\(version.minor).\(version.patch)"
-    let hash: String? = (try? await runInDocker(
+    let hash = (try await runInDocker(
         volumeURLs: nil,
         commands: [
             "./get_tag_hash.sh \(versionString)",
         ],
         showDockerLogs: false
-    ))?.trimmingCharacters(in: .whitespacesAndNewlines)
+    )).trimmingCharacters(in: .whitespacesAndNewlines)
     
-    guard let hash = hash,
-          !hash.contains("not found")
-    else {
+    guard hash != "Tag not found" else {
         throw .manifest(.invalidSpaceVersion(
             manifestPath: manifestPath,
             versionFound: versionString
