@@ -21,7 +21,8 @@ func runInTerminal(
     
     var environment = environment
     environment["PATH"] = ProcessInfo.processInfo.environment["PATH"] ?? ""
-    
+    environment["HOME"] = ProcessInfo.processInfo.environment["HOME"] ?? ""
+
     task.environment = environment
     task.arguments = ["-c", command]
     
