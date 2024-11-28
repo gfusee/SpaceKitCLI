@@ -10,6 +10,8 @@ COPY generate_tag_script.sh generate_tag_script.sh
 RUN apt update
 RUN apt install binaryen
 
+RUN git config --global safe.directory '*'
+
 RUN chmod +x generate_tag_script.sh
 RUN ./generate_tag_script.sh https://github.com/gfusee/space.git
 
