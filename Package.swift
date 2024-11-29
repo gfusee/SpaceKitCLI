@@ -4,12 +4,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "SpaceCLI",
+    name: "SpaceKitCLI",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "SpaceCLI", targets: ["SpaceCLI"])
+        .executable(name: "SpaceKitCLI", targets: ["SpaceKitCLI"])
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-package-manager", revision: "630330a"),
@@ -17,7 +17,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "SpaceCLI",
+            name: "SpaceKitCLI",
             dependencies: [
                 .product(name: "SwiftPM-auto", package: "swift-package-manager"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),

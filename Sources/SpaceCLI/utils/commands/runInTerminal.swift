@@ -109,9 +109,9 @@ func runInDocker(
         )
     }
     
-    let dockerImage = "ghcr.io/gfusee/space-cli:0.0.7"
+    let dockerImage = "ghcr.io/gfusee/spacekit-cli:0.0.8"
     
-    // Try to pull the space-cli docker image, but skip if:
+    // Try to pull the spacekit-cli docker image, but skip if:
     //
     // - The image already exists
     // - There is no internet connection

@@ -11,7 +11,7 @@ struct InitCommandOptions: ParsableArguments {
 struct InitCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "init",
-        abstract: "Create a new Space project in a new directory."
+        abstract: "Create a new SpaceKit project in a new directory."
     )
     
     @OptionGroup var options: InitCommandOptions

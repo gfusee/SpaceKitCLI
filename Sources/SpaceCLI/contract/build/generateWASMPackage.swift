@@ -32,36 +32,36 @@ fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) ->
 }
 
 /// Generates the code of a Package.swift containing the contract target, ready for WASM compilation
-func generateWASMPackage(sourcePackagePath: String, target: String) async throws(CLIError) -> (generatedPackage: String, spaceHash: String) {
+func generateWASMPackage(sourcePackagePath: String, target: String) async throws(CLIError) -> (generatedPackage: String, spaceKitHash: String) {
     let manifestPath = "\(sourcePackagePath)/Package.swift"
     let manifest = try retrieveManifest(sourcePackagePath: sourcePackagePath)
     let packageDependencies = manifest.dependencies
-    let spaceDependency = packageDependencies.first { print($0.nameForModuleDependencyResolutionOnly); return $0.nameForModuleDependencyResolutionOnly.lowercased(with: .current) == "space" }
-    guard let spaceDependency = spaceDependency else {
-        throw .manifest(.spaceDependencyNotFound(manifestPath: manifestPath))
+    let spaceKitDependency = packageDependencies.first { print($0.nameForModuleDependencyResolutionOnly); return $0.nameForModuleDependencyResolutionOnly.lowercased(with: .current) == "spacekit" }
+    guard let spaceKitDependency = spaceKitDependency else {
+        throw .manifest(.spaceKitDependencyNotFound(manifestPath: manifestPath))
     }
     
-    guard case .sourceControl(let spaceSourceControlInfo) = spaceDependency else {
-        throw .manifest(.spaceDependencyShouldBeAGitRepository(manifestPath: manifestPath))
+    guard case .sourceControl(let spaceKitSourceControlInfo) = spaceKitDependency else {
+        throw .manifest(.spaceKitDependencyShouldBeAGitRepository(manifestPath: manifestPath))
     }
     
-    let spaceUrl: String
-    switch spaceSourceControlInfo.location {
+    let spaceKitUrl: String
+    switch spaceKitSourceControlInfo.location {
     case .local(let setting):
-        spaceUrl = setting.pathString
+        spaceKitUrl = setting.pathString
     case .remote(let settings):
-        spaceUrl = settings.absoluteString
+        spaceKitUrl = settings.absoluteString
     }
     
-    let spaceRequirements: PackageRequirement
+    let spaceKitRequirements: PackageRequirement
     do {
-        spaceRequirements = try spaceDependency.toConstraintRequirement()
+        spaceKitRequirements = try spaceKitDependency.toConstraintRequirement()
     } catch {
-        throw .manifest(.cannotReadDependencyRequirement(manifestPath: manifestPath, dependency: "Space"))
+        throw .manifest(.cannotReadDependencyRequirement(manifestPath: manifestPath, dependency: "SpaceKit"))
     }
     
-    guard case .versionSet(.exact(let version)) = spaceRequirements else {
-        throw .manifest(.spaceDependencyShouldHaveExactVersion(manifestPath: manifestPath))
+    guard case .versionSet(.exact(let version)) = spaceKitRequirements else {
+        throw .manifest(.spaceKitDependencyShouldHaveExactVersion(manifestPath: manifestPath))
     }
     
     let versionString = "\(version.major).\(version.minor).\(version.patch)"
@@ -74,7 +74,7 @@ func generateWASMPackage(sourcePackagePath: String, target: String) async throws
     )).trimmingCharacters(in: .whitespacesAndNewlines)
     
     guard hash != "Tag not found" else {
-        throw .manifest(.invalidSpaceVersion(
+        throw .manifest(.invalidSpaceKitVersion(
             manifestPath: manifestPath,
             versionFound: versionString
         ))
@@ -103,7 +103,7 @@ func generateWASMPackage(sourcePackagePath: String, target: String) async throws
         ],
         products: [],
         dependencies: [
-            .package(url: "\(spaceUrl)", revision: "\(hash)")
+            .package(url: "\(spaceKitUrl)", revision: "\(hash)")
         ],
         targets: [
             // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -111,7 +111,7 @@ func generateWASMPackage(sourcePackagePath: String, target: String) async throws
             .target(
                 name: "\(target)",
                 dependencies: [
-                    .product(name: "Space", package: "Space")
+                    .product(name: "SpaceKit", package: "SpaceKit")
                 ],
                 \(targetPath)
                 swiftSettings: [
@@ -135,5 +135,5 @@ func generateWASMPackage(sourcePackagePath: String, target: String) async throws
     )
     """
     
-    return (generatedPackage: packageCode, spaceHash: hash)
+    return (generatedPackage: packageCode, spaceKitHash: hash)
 }

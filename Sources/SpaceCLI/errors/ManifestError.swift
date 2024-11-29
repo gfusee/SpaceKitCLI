@@ -1,10 +1,10 @@
 enum ManifestError: Error, CustomStringConvertible {
     case cannotReadManifest(path: String)
-    case spaceDependencyNotFound(manifestPath: String)
+    case spaceKitDependencyNotFound(manifestPath: String)
     case cannotReadDependencyRequirement(manifestPath: String, dependency: String)
-    case spaceDependencyShouldHaveExactVersion(manifestPath: String)
-    case spaceDependencyShouldBeAGitRepository(manifestPath: String)
-    case invalidSpaceVersion(manifestPath: String, versionFound: String)
+    case spaceKitDependencyShouldHaveExactVersion(manifestPath: String)
+    case spaceKitDependencyShouldBeAGitRepository(manifestPath: String)
+    case invalidSpaceKitVersion(manifestPath: String, versionFound: String)
     case targetNotFound(manifestPath: String, target: String)
     
     var description: String {
@@ -14,26 +14,26 @@ enum ManifestError: Error, CustomStringConvertible {
             Cannot read the Package.swift at \(path).
             Check that the file exists and is well-formed.
             """
-        case .spaceDependencyNotFound(let manifestPath):
+        case .spaceKitDependencyNotFound(let manifestPath):
             """
-            The manifest \(manifestPath) doesn't contain the Space dependency.
+            The manifest \(manifestPath) doesn't contain the SpaceKit dependency.
             """
         case .cannotReadDependencyRequirement(let manifestPath, let dependency):
             """
             Cannot read the requirements for the following dependency: \(dependency) in \(manifestPath).
             Please make sure it has requirements, such as the version number.
             """
-        case .spaceDependencyShouldBeAGitRepository(let manifestPath):
+        case .spaceKitDependencyShouldBeAGitRepository(let manifestPath):
             """
-            The dependency "Space" in \(manifestPath) should has be a Git repository, local or remote.
+            The dependency "SpaceKit" in \(manifestPath) should has be a Git repository, local or remote.
             """
-        case .spaceDependencyShouldHaveExactVersion(let manifestPath):
+        case .spaceKitDependencyShouldHaveExactVersion(let manifestPath):
             """
-            The dependency "Space" in \(manifestPath) should has be specified by it's exact version.
+            The dependency "SpaceKit" in \(manifestPath) should has be specified by it's exact version.
             """
-        case .invalidSpaceVersion(let manifestPath, let versionFound):
+        case .invalidSpaceKitVersion(let manifestPath, let versionFound):
             """
-            Invalid version found for the Space dependency in \(manifestPath).
+            Invalid version found for the SpaceKit dependency in \(manifestPath).
             
             Version found: \(versionFound)
             """

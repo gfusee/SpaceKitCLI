@@ -8,10 +8,10 @@ actor CurrentTerminalProcess {
 }
 
 @main
-struct SpaceCLI: AsyncParsableCommand {
+struct SpaceKitCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "space",
-        abstract: "A CLI to perform operations related to the Space framework.",
+        abstract: "A CLI to perform operations related to the SpaceKit framework.",
         subcommands: [
             ContractCommand.self,
             InitCommand.self

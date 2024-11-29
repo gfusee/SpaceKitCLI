@@ -14,17 +14,17 @@ TEMP_DIR=$(mktemp -d)
 trap "echo \"Removing temp directories...\" && rm -rf $TEMP_DIR" EXIT INT TERM ERR
 
 cd $TEMP_DIR
-git clone https://github.com/gfusee/space-cli.git
-cd space-cli
+git clone https://github.com/gfusee/SpaceKitCLI.git
+cd SpaceKitCLI
 
 # Create the installation directory if it doesn't exist
 mkdir -p "$INSTALL_PATH"
 
 # Build the Swift product
-swift build --product SpaceCLI
+swift build --product SpaceKitCLI
 
 # Copy the built product to the installation bin path
-cp -f .build/debug/SpaceCLI "$INSTALL_BIN_PATH"
+cp -f .build/debug/SpaceKitCLI "$INSTALL_BIN_PATH"
 
 # Check if the installation path is already in the PATH environment variable
 if [[ ":$PATH:" != *":$INSTALL_PATH:"* ]]; then

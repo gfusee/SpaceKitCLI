@@ -1,6 +1,6 @@
 FROM swift:latest
 
-LABEL org.opencontainers.image.source=https://github.com/gfusee/space-cli
+LABEL org.opencontainers.image.source=https://github.com/gfusee/SpaceKitCLI
 
 VOLUME app
 WORKDIR /
@@ -13,7 +13,7 @@ RUN apt install binaryen
 RUN git config --global safe.directory '*'
 
 RUN chmod +x generate_tag_script.sh
-RUN ./generate_tag_script.sh https://github.com/gfusee/space.git
+RUN ./generate_tag_script.sh https://github.com/gfusee/SpaceKit.git
 
 RUN mkdir objects
 COPY memcpy.c objects/memcpy.c
