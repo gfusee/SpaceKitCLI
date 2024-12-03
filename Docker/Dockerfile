@@ -18,7 +18,5 @@ RUN ./generate_tag_script.sh https://github.com/gfusee/SpaceKit.git
 RUN mkdir objects
 COPY memcpy.c objects/memcpy.c
 COPY libclang_rt.builtins-wasm32.a objects/libclang_rt.builtins-wasm32.a
-COPY init.c objects/init.c
 
 RUN clang --target=wasm32 -O3 -c -o objects/memcpy.o objects/memcpy.c
-RUN clang --target=wasm32 -O3 -c -o objects/init.o objects/init.c
