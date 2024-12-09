@@ -104,6 +104,7 @@ func buildContract(
             "-o", wasmBuiltFilePath,
             objectFilePath,
             "objects/memcpy.o",
+            "objects/init.o",
             "objects/libclang_rt.builtins-wasm32.a"
         ]
         let wasmLdCommand = "wasm-ld \(wasmLdArguments.joined(separator: " "))"
