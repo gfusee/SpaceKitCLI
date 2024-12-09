@@ -38,37 +38,21 @@ func initializeProject(
     try await fetchTemplateProject(
         in: pwd,
         directoryName: name,
-        commitHash: "9450b643d81c5ed79b1ab267d96c8a1352b8a5f1"
+        commitHash: "1d49a80888e11d5769813ee7ef3d7df7c4f79588"
     )
     
-    let packageSwiftPath = projectPath.appending(path: "Package.swift")
-    
-    guard let packageSwiftContent = fileManager.contents(atPath: packageSwiftPath.path) else {
-        throw .projectInit(.cannotReadPackageSwift(path: packageSwiftPath.path))
-    }
-
-    guard var packageSwiftContent = String(data: packageSwiftContent, encoding: .utf8) else {
-        throw .projectInit(.cannotDecodePackageSwiftUsingUTF8(path: packageSwiftPath.path))
-    }
-    
-    packageSwiftContent = packageSwiftContent
-        .replacingOccurrences(of: "##PACKAGE_NAME##", with: name)
-        .replacingOccurrences(of: "##TARGET_NAME##", with: name)
-    
-    fileManager.createFile(atPath: packageSwiftPath.path, contents: packageSwiftContent.data(using: .utf8))
-    
-    let adderTemplateContractPath = projectPath.appending(path: "Contracts/Counter")
+    let counterTemplateContractPath = projectPath.appending(path: "Contracts/Counter")
     let namedTemplateContractPath = projectPath.appending(path: "Contracts/\(name)")
-    
-    do {
-        try fileManager.moveItem(at: adderTemplateContractPath, to: namedTemplateContractPath)
-    }
-    catch {
-        throw .fileManager(.cannotMoveFileOrDirectory(at: adderTemplateContractPath, to: namedTemplateContractPath))
-    }
     
     let counterTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/CounterTests")
     let namedTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/\(name)Tests")
+    
+    do {
+        try fileManager.moveItem(at: counterTemplateContractPath, to: namedTemplateContractPath)
+    }
+    catch {
+        throw .fileManager(.cannotMoveFileOrDirectory(at: counterTemplateContractPath, to: namedTemplateContractPath))
+    }
     
     do {
         try fileManager.moveItem(at: counterTestTemplateContractPath, to: namedTestTemplateContractPath)
@@ -82,5 +66,26 @@ func initializeProject(
         try fileManager.removeItem(at: gitDirectoryPath)
     } catch {
         throw .fileManager(.cannotRemoveFileOrDirectory(path: gitDirectoryPath))
+    }
+    
+    let templateFilesPaths = [
+        projectPath.appending(path: "Package.swift"),
+        namedTestTemplateContractPath.appending(path: "CounterTests.swift")
+    ]
+    
+    for templateFilePath in templateFilesPaths {
+        guard let templateFileContent = fileManager.contents(atPath: templateFilePath.path) else {
+            throw .projectInit(.cannotReadFile(path: templateFilePath.path))
+        }
+
+        guard var templateFileContent = String(data: templateFileContent, encoding: .utf8) else {
+            throw .projectInit(.cannotDecodePackageSwiftUsingUTF8(path: templateFilePath.path))
+        }
+        
+        templateFileContent = templateFileContent
+            .replacingOccurrences(of: "##PACKAGE_NAME##", with: name)
+            .replacingOccurrences(of: "##TARGET_NAME##", with: name)
+        
+        fileManager.createFile(atPath: templateFilePath.path, contents: templateFileContent.data(using: .utf8))
     }
 }
