@@ -1,6 +1,6 @@
 enum ProjectInitError: Error, CustomStringConvertible {
     case directoryAlreadyExists(path: String)
-    case cannotReadPackageSwift(path: String)
+    case cannotReadFile(path: String)
     case cannotDecodePackageSwiftUsingUTF8(path: String)
     
     var description: String {
@@ -9,9 +9,9 @@ enum ProjectInitError: Error, CustomStringConvertible {
             """
             The directory \(path) already exists.
             """
-        case .cannotReadPackageSwift(let path):
+        case .cannotReadFile(let path):
             """
-            Cannot read the fetched \(path) template.
+            Cannot read the fetched temlate file: \(path).
             """
         case .cannotDecodePackageSwiftUsingUTF8(let path):
             """
