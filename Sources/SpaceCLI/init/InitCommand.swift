@@ -35,7 +35,11 @@ func initializeProject(
         throw .projectInit(.directoryAlreadyExists(path: pwd.path))
     }
     
-    try await fetchTemplateProject(in: pwd, directoryName: name)
+    try await fetchTemplateProject(
+        in: pwd,
+        directoryName: name,
+        commitHash: "9450b643d81c5ed79b1ab267d96c8a1352b8a5f1"
+    )
     
     let packageSwiftPath = projectPath.appending(path: "Package.swift")
     
@@ -53,7 +57,7 @@ func initializeProject(
     
     fileManager.createFile(atPath: packageSwiftPath.path, contents: packageSwiftContent.data(using: .utf8))
     
-    let adderTemplateContractPath = projectPath.appending(path: "Contracts/Adder")
+    let adderTemplateContractPath = projectPath.appending(path: "Contracts/Counter")
     let namedTemplateContractPath = projectPath.appending(path: "Contracts/\(name)")
     
     do {
@@ -63,14 +67,14 @@ func initializeProject(
         throw .fileManager(.cannotMoveFileOrDirectory(at: adderTemplateContractPath, to: namedTemplateContractPath))
     }
     
-    let adderTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/AdderTests")
+    let counterTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/CounterTests")
     let namedTestTemplateContractPath = namedTemplateContractPath.appending(path: "Tests/\(name)Tests")
     
     do {
-        try fileManager.moveItem(at: adderTestTemplateContractPath, to: namedTestTemplateContractPath)
+        try fileManager.moveItem(at: counterTestTemplateContractPath, to: namedTestTemplateContractPath)
     }
     catch {
-        throw .fileManager(.cannotMoveFileOrDirectory(at: adderTestTemplateContractPath, to: namedTestTemplateContractPath))
+        throw .fileManager(.cannotMoveFileOrDirectory(at: counterTestTemplateContractPath, to: namedTestTemplateContractPath))
     }
     
     let gitDirectoryPath = projectPath.appending(path: ".git")
