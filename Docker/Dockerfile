@@ -1,10 +1,12 @@
-FROM swift:latest
+FROM swift:6.0.2
 
 LABEL org.opencontainers.image.source=https://github.com/gfusee/SpaceKitCLI
 
 VOLUME app
 WORKDIR /
 
+COPY TemplateSpaceKitABIGenerator TemplateSpaceKitABIGenerator
+COPY generate_abi_generator.sh generate_abi_generator.sh
 COPY generate_tag_script.sh generate_tag_script.sh
 
 RUN apt update
@@ -12,6 +14,7 @@ RUN apt install binaryen
 
 RUN git config --global safe.directory '*'
 
+RUN chmod +x generate_abi_generator.sh
 RUN chmod +x generate_tag_script.sh
 RUN ./generate_tag_script.sh https://github.com/gfusee/SpaceKit.git
 

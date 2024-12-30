@@ -32,7 +32,11 @@ fileprivate func retrieveManifest(sourcePackagePath: String) throws(CLIError) ->
 }
 
 /// Generates the code of a Package.swift containing the contract target, ready for WASM compilation
-func generateWASMPackage(sourcePackagePath: String, target: String) async throws(CLIError) -> (generatedPackage: String, spaceKitHash: String) {
+func generateWASMPackage(
+    sourcePackagePath: String,
+    target: String,
+    overrideSpaceKitHash: String?
+) async throws(CLIError) -> (generatedPackage: String, spaceKitHash: String) {
     let manifestPath = "\(sourcePackagePath)/Package.swift"
     let manifest = try retrieveManifest(sourcePackagePath: sourcePackagePath)
     let packageDependencies = manifest.dependencies
@@ -60,23 +64,35 @@ func generateWASMPackage(sourcePackagePath: String, target: String) async throws
         throw .manifest(.cannotReadDependencyRequirement(manifestPath: manifestPath, dependency: "SpaceKit"))
     }
     
-    guard case .versionSet(.exact(let version)) = spaceKitRequirements else {
-        throw .manifest(.spaceKitDependencyShouldHaveExactVersion(manifestPath: manifestPath))
-    }
+    let hash: String
+    let versionFound: String
     
-    let versionString = "\(version.major).\(version.minor).\(version.patch)"
-    let hash = (try await runInDocker(
-        volumeURLs: nil,
-        commands: [
-            "./get_tag_hash.sh \(versionString)",
-        ],
-        showDockerLogs: false
-    )).trimmingCharacters(in: .whitespacesAndNewlines)
+    if let overrideSpaceKitHash = overrideSpaceKitHash {
+        hash = overrideSpaceKitHash
+        versionFound = "0.0.0"
+    } else {
+        guard case .versionSet(.exact(let version)) = spaceKitRequirements else {
+            throw .manifest(.spaceKitDependencyShouldHaveExactVersion(manifestPath: manifestPath))
+        }
+        
+        let versionString = "\(version.major).\(version.minor).\(version.patch)"
+        
+        let knownHash = (try await runInDocker(
+            volumeURLs: nil,
+            commands: [
+                "./get_tag_hash.sh \(versionString)",
+            ],
+            showDockerLogs: false
+        )).trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        hash = knownHash
+        versionFound = versionString
+    }
     
     guard hash != "Tag not found" else {
         throw .manifest(.invalidSpaceKitVersion(
             manifestPath: manifestPath,
-            versionFound: versionString
+            versionFound: versionFound
         ))
     }
     

@@ -9,6 +9,9 @@ struct BuildCommandOptions: ParsableArguments {
     
     @Option(help: "The path to a custom swift toolchain.")
     var customSwiftToolchain: String? = nil
+    
+    @Option(help: "Override the hash to use for the SpaceKit dependency in Swift Package Manager.")
+    var overrideSpacekitHash: String? = nil
 }
 
 struct BuildCommand: AsyncParsableCommand {
@@ -22,14 +25,16 @@ struct BuildCommand: AsyncParsableCommand {
     mutating func run() async throws {
         try await buildContract(
             contractName: self.options.contract,
-            customSwiftToolchain: self.options.customSwiftToolchain
+            customSwiftToolchain: self.options.customSwiftToolchain,
+            overrideSpaceKitHash: self.options.overrideSpacekitHash
         )
     }
 }
 
 func buildContract(
     contractName: String?,
-    customSwiftToolchain: String?
+    customSwiftToolchain: String?,
+    overrideSpaceKitHash: String?
 ) async throws(CLIError) {
     guard try isValidProject() else {
         throw .common(.invalidProject)
@@ -52,7 +57,11 @@ func buildContract(
     let pwd = fileManager.currentDirectoryPath
     let destVolumePath = "/app"
     
-    let wasmPackageInfo = (try await generateWASMPackage(sourcePackagePath: pwd, target: target))
+    let wasmPackageInfo = try await generateWASMPackage(
+        sourcePackagePath: pwd,
+        target: target,
+        overrideSpaceKitHash: overrideSpaceKitHash
+    )
     
     let buildFolder = "\(destVolumePath)/.space/sc-build"
     let buildFolderUrl = URL(fileURLWithPath: buildFolder, isDirectory: true)
@@ -114,6 +123,12 @@ func buildContract(
         let oldWasmRmCommand = "rm -f \(wasmDestFilePath)"
         let copyWasmCommand = "cp \(wasmOptFilePath) \(wasmDestFilePath)"
         
+        let buildSymbolGraphCommand = "(cd /app && swift build -Xswiftc -emit-symbol-graph -Xswiftc -symbol-graph-minimum-access-level -Xswiftc private -Xswiftc -emit-symbol-graph-dir -Xswiftc .build/symbol-graphs)"
+        
+        let generateABISwiftProjectCommand = "./generate_abi_generator.sh \(wasmPackageInfo.spaceKitHash) \(target) \(target)"
+        
+        let generateABICommand = "(cd SpaceKitABIGenerator && swift run SpaceKitABIGenerator \(targetPackageOutputPath)/\(target).abi.json)"
+        
         let _ = try await runInDocker(
             volumeURLs: (
                 host: URL(fileURLWithPath: pwd, isDirectory: true),
@@ -130,7 +145,10 @@ func buildContract(
                 wasmLdCommand,
                 wasmOptCommand,
                 oldWasmRmCommand,
-                copyWasmCommand
+                copyWasmCommand,
+                buildSymbolGraphCommand,
+                generateABISwiftProjectCommand,
+                generateABICommand
             ]
         )
         

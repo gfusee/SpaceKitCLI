@@ -25,7 +25,7 @@ enum ManifestError: Error, CustomStringConvertible {
             """
         case .spaceKitDependencyShouldBeAGitRepository(let manifestPath):
             """
-            The dependency "SpaceKit" in \(manifestPath) should has be a Git repository, local or remote.
+            The dependency "SpaceKit" in \(manifestPath) should be a Git repository, local or remote.
             """
         case .spaceKitDependencyShouldHaveExactVersion(let manifestPath):
             """

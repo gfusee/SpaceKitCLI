@@ -109,7 +109,7 @@ func runInDocker(
         )
     }
     
-    let dockerImage = "ghcr.io/gfusee/spacekit-cli:0.0.9"
+    let dockerImage = "ghcr.io/gfusee/spacekit-cli:0.0.10"
     
     // Try to pull the spacekit-cli docker image, but skip if:
     //

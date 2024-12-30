@@ -38,7 +38,7 @@ func initializeProject(
     try await fetchTemplateProject(
         in: pwd,
         directoryName: name,
-        commitHash: "1d49a80888e11d5769813ee7ef3d7df7c4f79588"
+        commitHash: "1144d729e0b4d2383c9d091594694cef10f0eed7"
     )
     
     let counterTemplateContractPath = projectPath.appending(path: "Contracts/Counter")
