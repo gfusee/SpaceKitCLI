@@ -76,6 +76,8 @@ func buildContract(
     let targetPackageOutputPath = "\(destVolumePath)/Contracts/\(target)/Output"
     let wasmDestFilePath = "\(targetPackageOutputPath)/\(target).wasm"
     let wasmHostFinalPath = wasmDestFilePath.replacingOccurrences(of: destVolumePath, with: pwd)
+    let abiDestFilePath = "\(targetPackageOutputPath)/\(target).abi.json"
+    let abiHostFinalPath = abiDestFilePath.replacingOccurrences(of: destVolumePath, with: pwd)
 
     let swiftCommand = "/usr/bin/swift"
 
@@ -127,7 +129,7 @@ func buildContract(
         
         let generateABISwiftProjectCommand = "./generate_abi_generator.sh \(wasmPackageInfo.spaceKitHash) \(target) \(target)"
         
-        let generateABICommand = "(cd SpaceKitABIGenerator && swift run SpaceKitABIGenerator \(targetPackageOutputPath)/\(target).abi.json)"
+        let generateABICommand = "(cd SpaceKitABIGenerator && swift run SpaceKitABIGenerator \(abiDestFilePath))"
         
         let _ = try await runInDocker(
             volumeURLs: (
@@ -156,6 +158,7 @@ func buildContract(
             """
             \(target) built successfully!
             WASM output: \(wasmHostFinalPath)
+            ABI output: \(abiHostFinalPath)
             """
         )
     } catch {

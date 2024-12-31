@@ -27,13 +27,9 @@ func main() {
 
         let jsonData = try! jsonEncoder.encode(abi)
         
-        print(String(data: jsonData, encoding: .utf8)!)
-
         // Write the JSON data to the specified file path
         let fileURL = URL(fileURLWithPath: outputFilePath)
         try jsonData.write(to: fileURL)
-
-        print("ABI JSON successfully written to \(outputFilePath)")
     } catch {
         // Handle any errors that occur
         print("An error occurred: \(error)")
