@@ -127,7 +127,7 @@ func buildContract(
         
         let buildSymbolGraphCommand = "(cd /app && swift build -Xswiftc -emit-symbol-graph -Xswiftc -symbol-graph-minimum-access-level -Xswiftc private -Xswiftc -emit-symbol-graph-dir -Xswiftc .build/symbol-graphs)"
         
-        let generateABISwiftProjectCommand = "./generate_abi_generator.sh \(wasmPackageInfo.spaceKitHash) \(target) \(target)"
+        let generateABISwiftProjectCommand = "./generate_abi_generator.sh \(wasmPackageInfo.spaceKitHash) \(target) \(target) \(wasmPackageInfo.versionFound)"
         
         let generateABICommand = "(cd SpaceKitABIGenerator && swift run SpaceKitABIGenerator \(abiDestFilePath))"
         

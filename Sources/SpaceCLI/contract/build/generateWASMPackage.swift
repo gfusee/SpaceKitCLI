@@ -36,7 +36,7 @@ func generateWASMPackage(
     sourcePackagePath: String,
     target: String,
     overrideSpaceKitHash: String?
-) async throws(CLIError) -> (generatedPackage: String, spaceKitHash: String) {
+) async throws(CLIError) -> (generatedPackage: String, spaceKitHash: String, versionFound: String) {
     let manifestPath = "\(sourcePackagePath)/Package.swift"
     let manifest = try retrieveManifest(sourcePackagePath: sourcePackagePath)
     let packageDependencies = manifest.dependencies
@@ -151,5 +151,9 @@ func generateWASMPackage(
     )
     """
     
-    return (generatedPackage: packageCode, spaceKitHash: hash)
+    return (
+        generatedPackage: packageCode,
+        spaceKitHash: hash,
+        versionFound: versionFound
+    )
 }

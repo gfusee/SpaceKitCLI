@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <SPACEKIT_HASH> <PACKAGE_NAME> <TARGET_NAME>"
+if [ "$#" -ne 4 ]; then
+  echo "Usage: $0 <SPACEKIT_HASH> <PACKAGE_NAME> <TARGET_NAME> <SPACEKIT_VERSION>"
   exit 1
 fi
 
@@ -10,6 +10,7 @@ fi
 SPACEKIT_HASH=$1
 PACKAGE_NAME=$2
 TARGET_NAME=$3
+SPACEKIT_VERSION=$4
 
 # Folder names
 TEMPLATE_FOLDER="TemplateSpaceKitABIGenerator"
@@ -44,6 +45,7 @@ replace_placeholders() {
     -e "s/##SPACEKIT_HASH##/$SPACEKIT_HASH/g" \
     -e "s/##PACKAGE_NAME##/$PACKAGE_NAME/g" \
     -e "s/##TARGET_NAME##/$TARGET_NAME/g" \
+    -e "s/##SPACEKIT_VERSION##/$SPACEKIT_VERSION/g" \
     "$input_file" > "$output_file"
 }
 

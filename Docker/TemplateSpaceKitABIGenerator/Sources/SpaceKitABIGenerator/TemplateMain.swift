@@ -22,7 +22,7 @@ func main() {
     let outputFilePath = CommandLine.arguments[1]
 
     do {
-        let abi = MyABIGenerator.getABI()
+        let abi = MyABIGenerator.getABI(contractName: "##TARGET_NAME##", version: "##SPACEKIT_VERSION##")
         let jsonEncoder = ABIJSONEncoder()
 
         let jsonData = try! jsonEncoder.encode(abi)
