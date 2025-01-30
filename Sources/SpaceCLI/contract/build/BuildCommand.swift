@@ -12,6 +12,9 @@ struct BuildCommandOptions: ParsableArguments {
     
     @Option(help: "Override the hash to use for the SpaceKit dependency in Swift Package Manager.")
     var overrideSpacekitHash: String? = nil
+    
+    @Flag(help: "Skip ABI generation, resulting in much faster builds.")
+    var skipABIGeneration: Bool = false
 }
 
 struct BuildCommand: AsyncParsableCommand {
@@ -26,7 +29,8 @@ struct BuildCommand: AsyncParsableCommand {
         try await buildContract(
             contractName: self.options.contract,
             customSwiftToolchain: self.options.customSwiftToolchain,
-            overrideSpaceKitHash: self.options.overrideSpacekitHash
+            overrideSpaceKitHash: self.options.overrideSpacekitHash,
+            skipABIGeneration: self.options.skipABIGeneration
         )
     }
 }
@@ -34,7 +38,8 @@ struct BuildCommand: AsyncParsableCommand {
 func buildContract(
     contractName: String?,
     customSwiftToolchain: String?,
-    overrideSpaceKitHash: String?
+    overrideSpaceKitHash: String?,
+    skipABIGeneration: Bool = false
 ) async throws(CLIError) {
     guard try isValidProject() else {
         throw .common(.invalidProject)
@@ -131,35 +136,49 @@ func buildContract(
         
         let generateABICommand = "(cd SpaceKitABIGenerator && swift run SpaceKitABIGenerator \(abiDestFilePath))"
         
+        var allCommands = [
+            rmContractsCommand,
+            createContractsCommand,
+            rmOldGeneratedPackage,
+            echoNewPackageCommand,
+            createOutputDirectoryCommand,
+            symbolicTargetLinkCommand,
+            swiftBuildCommand,
+            wasmLdCommand,
+            wasmOptCommand,
+            oldWasmRmCommand,
+            copyWasmCommand
+        ]
+        
+        if !skipABIGeneration {
+            allCommands.append(contentsOf: [
+                buildSymbolGraphCommand,
+                generateABISwiftProjectCommand,
+                generateABICommand
+            ])
+        }
+        
         let _ = try await runInDocker(
             volumeURLs: (
                 host: URL(fileURLWithPath: pwd, isDirectory: true),
                 dest: URL(fileURLWithPath: destVolumePath, isDirectory: true)
             ),
-            commands: [
-                rmContractsCommand,
-                createContractsCommand,
-                rmOldGeneratedPackage,
-                echoNewPackageCommand,
-                createOutputDirectoryCommand,
-                symbolicTargetLinkCommand,
-                swiftBuildCommand,
-                wasmLdCommand,
-                wasmOptCommand,
-                oldWasmRmCommand,
-                copyWasmCommand,
-                buildSymbolGraphCommand,
-                generateABISwiftProjectCommand,
-                generateABICommand
-            ]
+            commands: allCommands
         )
         
-        print(
-            """
+        var resultsInfo = """
             \(target) built successfully!
             WASM output: \(wasmHostFinalPath)
-            ABI output: \(abiHostFinalPath)
             """
+        
+        if skipABIGeneration {
+            resultsInfo += "\nNo ABI has been generated because --skip-abi-generation is specified"
+        } else {
+            resultsInfo += "\nABI output: \(abiHostFinalPath)"
+        }
+        
+        print(
+            resultsInfo
         )
     } catch {
         print("error: \(error)")
