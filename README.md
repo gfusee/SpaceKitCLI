@@ -1,1 +1,1 @@
-Oh, you found this repo before the official announcement! If you want to give the framework a try, write me a DM on X: @gfusee33
+Command Line Interface for [SpaceKit](https://github.com/gfusee/SpaceKit), this repo will be integrated in SpaceKit in the future
